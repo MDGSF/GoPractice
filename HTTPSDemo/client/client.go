@@ -27,8 +27,7 @@ func main() {
 	}
 
 	tlsConfig := &tls.Config{}
-	tlsConfig.InsecureSkipVerify = true
-	tlsConfig.ServerName = "localhost"
+	//tlsConfig.ServerName = "localhost"
 	tlsConfig.RootCAs = roots
 	tlsConfig.Certificates = make([]tls.Certificate, 1)
 	tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(ClientCertPath, ClientKeyPath)
