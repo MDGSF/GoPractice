@@ -15,7 +15,6 @@ hgetall(key)：返回名称为key的hash中所有的键（field）及其对应�
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/MDGSF/utils/log"
@@ -26,14 +25,90 @@ var c redis.Conn
 
 func main() {
 	start()
-	test8()
+	test10()
 }
 
 func start() {
 	var err error
-	c, err = redis.Dial("tcp", "127.0.0.1:6379")
+	//c, err = redis.Dial("tcp", "127.0.0.1:6379")
+	c, err = redis.Dial("tcp", "192.168.1.178:6379")
 	if err != nil {
-		fmt.Println("connect to redis error", err)
+		log.Error("connect to redis error", err)
+		return
+	}
+
+	_, err = c.Do("SELECT", "1")
+	if err != nil {
+		log.Error("select failed, err = %v", err)
+		return
+	}
+}
+
+// hmset hmget
+func test10() {
+	_, err := c.Do("HMSET", "student", "id", "1111111111", "name", "huangjian", "age", 12)
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+
+	id, err := redis.String(c.Do("HGET", "student", "id"))
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+	name, err := redis.String(c.Do("HGET", "student", "name"))
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+	age, err := redis.Int(c.Do("HGET", "student", "age"))
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+	log.Info("id = %v", id)
+	log.Info("name = %v", name)
+	log.Info("age = %v", age)
+
+	result, err := redis.Strings(c.Do("hgetall", "student"))
+	if err != nil {
+		log.Error("hmget student failed, err = %v", err)
+		return
+	}
+	log.Info("result = %v", result)
+}
+
+// hmset
+func test9() {
+	_, err := c.Do("HMSET", "student", "id", "1111111111", "name", "huangjian", "age", 12)
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+
+	id, err := redis.String(c.Do("HGET", "student", "id"))
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+	name, err := redis.String(c.Do("HGET", "student", "name"))
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+	age, err := redis.Int(c.Do("HGET", "student", "age"))
+	if err != nil {
+		log.Error("redis set failed, err = %v", err)
+		return
+	}
+	log.Info("id = %v", id)
+	log.Info("name = %v", name)
+	log.Info("age = %v", age)
+
+	_, err = c.Do("DEL", "student")
+	if err != nil {
+		log.Error("del student failed, err = %v", err)
 		return
 	}
 }

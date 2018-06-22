@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -69,6 +71,12 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func calcDigest(r io.Reader) string {
+	h := sha1.New()
+	io.Copy(h, r)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func uploadPut(w http.ResponseWriter, r *http.Request) {
 	log.Info("uploadPut start")
 	file, handler, err := r.FormFile("uploadfile")
@@ -77,6 +85,9 @@ func uploadPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
+	log.Info("sha1 = %v", calcDigest(file))
+	file.Seek(io.SeekStart, 0)
 
 	log.Info("handler.Filename = %v", handler.Filename)
 	newFileName := filepath.Base(r.URL.Path)
