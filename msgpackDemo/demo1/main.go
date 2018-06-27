@@ -23,8 +23,8 @@ func main() {
 		msgpack can use like json, just get data you want.
 	*/
 	type StudentRecv struct {
-		NewID  string `msgpack:"id"`
 		NewAge int    `msgpack:"age"`
+		NewID  string `msgpack:"id"`
 	}
 	s := &StudentRecv{}
 	err = msgpack.Unmarshal(b, s)
