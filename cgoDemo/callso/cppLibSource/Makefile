@@ -13,7 +13,7 @@ dynamicLib:
 	mv libadd.so ../cppLib/linux/dynamicLib
 
 staticLib:
-	g++ -c -o add.o add.cpp && ar -rs add.a add.o
+	g++ -Wall -c -o add.o add.cpp && ar rcs libadd.a add.o
 	rm -rf add.o
 	mkdir -p ../cppLib/linux/staticLib
-	mv add.a ../cppLib/linux/staticLib
+	mv libadd.a ../cppLib/linux/staticLib

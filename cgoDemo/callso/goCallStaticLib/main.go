@@ -2,7 +2,8 @@ package main
 
 /*
 #cgo CFLAGS : -I../cppLibSource
-#cgo LDFLAGS: -L../cppLib/staticLib/add.a -lstdc++
+#cgo LDFLAGS: -L../cppLib/linux/staticLib/ -ladd
+
 #include "add.h"
 */
 import "C"
@@ -10,5 +11,5 @@ import "C"
 import "fmt"
 
 func main() {
-	fmt.Println("add(1, 2) = %v", C.add(1, 2))
+	fmt.Printf("add(1, 2) = %v\n", C.add(1, 2))
 }
