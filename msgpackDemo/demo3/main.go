@@ -16,6 +16,10 @@ type TMsg2 struct {
 	Image []string `msgpack:"image"`
 }
 
+type TMsg3 struct {
+	Name string `msgpack:"name,omitempty"`
+}
+
 func main() {
 	test1()
 	test2()
@@ -23,6 +27,14 @@ func main() {
 	testMsg2_1()
 	testMsg2_2()
 	testMsg2_3()
+	testMsg3_1()
+}
+
+func testMsg3_1() {
+	//msg := &TMsg3{Name: "testMsg3_1"}
+	msg := &TMsg3{}
+	b, _ := msgpack.Marshal(msg)
+	fmt.Println(string(b))
 }
 
 func testMsg2_3() {
