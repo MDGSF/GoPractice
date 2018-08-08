@@ -75,6 +75,7 @@ func go2c() {
 	fmt.Printf("%c\n", C.char('Y'))
 	fmt.Println(C.uchar('C'))
 	fmt.Println(C.short(254))
+	fmt.Println(C.int(254111))
 	fmt.Println(C.long(11112222))
 
 	var goi int = 2
