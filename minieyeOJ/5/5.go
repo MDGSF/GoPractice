@@ -10,7 +10,7 @@ type Pair struct {
 	v int
 }
 
-var arr [30]int
+var arr [110000]int
 
 func main() {
 	var x int
@@ -42,7 +42,8 @@ func f(x, y int) int {
 	l.PushBack(Pair{k: x, v: 0})
 
 	for l.Len() > 0 {
-		p := l.Front().Value.(Pair)
+		e := l.Front()
+		p := e.Value.(Pair)
 
 		if v, end := process(l, y, p.k+1, p.v+1); end {
 			return v
@@ -54,7 +55,9 @@ func f(x, y int) int {
 			return v
 		}
 
-		showArr()
+		l.Remove(e)
+
+		//showArr()
 	}
 
 	return 0
