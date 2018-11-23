@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 	}
 
 	for _, v := range words {
-		fmt.Printf("%v %v\n", v, root.FindPrefix(v))
+		fmt.Printf("%v %s\n", v, root.FindPrefix(v))
 	}
 }
 
@@ -105,21 +106,25 @@ func (t *Trie) FindPrefix(word string) string {
 }
 
 func getWord(t *Trie) string {
-	word := innerGetWord(t, "")
-	wordByte := []byte(word)
+
+	wordSlice := make([]byte, 0)
+	wordSlice = innerGetWord(t, wordSlice)
 	newByte := make([]byte, 0)
-	i := len(wordByte) - 1
+	i := len(wordSlice) - 1
 	for i >= 0 {
-		newByte = append(newByte, wordByte[i])
+		newByte = append(newByte, wordSlice[i])
 		i--
 	}
-	return string(newByte)
+	return strings.TrimSpace(string(newByte))
 }
 
-func innerGetWord(t *Trie, s string) string {
+func innerGetWord(t *Trie, s []byte) []byte {
 	if t == nil {
 		return s
 	}
 
-	return innerGetWord(t.Parent, s+string(t.C))
+	if t.Parent != nil {
+		s = append(s, t.C)
+	}
+	return innerGetWord(t.Parent, s)
 }
