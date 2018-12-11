@@ -49,6 +49,14 @@ func main() {
 	test5()
 	test6()
 	test7()
+	test8()
+}
+
+func test8() {
+	// ip address
+	r := regexp.MustCompile(`((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)`)
+	all := r.FindAllString("my server ip addr 127.0.0.1, and port is 22", -1)
+	fmt.Println(len(all), all)
 }
 
 func test7() {
@@ -96,14 +104,12 @@ func test3() {
 
 func test2() {
 	r, _ := regexp.Compile(`^\s*\"(.+?)\"\s*$`)
-	all := r.FindAllString("  \"Huang Jian\"  ", -1)
-	fmt.Println(len(all), all)
-	// 1 [  "Huang Jian"  ]
+	fmt.Println(r.MatchString("  \"Huang Jian\"  "))
+	// true
 }
 
 func test1() {
 	r, _ := regexp.Compile(`^(.+?)\s+(.+)$`)
-	all := r.FindAllString("127.0.0.1:12580  desekldjsflkasjf:fdasf  fkdasjflksajf", -1)
-	fmt.Println(len(all), all)
-	// 1 [127.0.0.1:12580  desekldjsflkasjf:fdasf  fkdasjflksajf]
+	fmt.Println(r.MatchString("127.0.0.1:12580  desekldjsflkasjf:fdasf  fkdasjflksajf"))
+	// true
 }
