@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"net"
-	"strings"
 )
 
+const IntMax = int32(^uint32(0) >> 1)
+const IntMin = ^IntMax
+
 func main() {
-	fmt.Println("vim-go")
-	strings.Split()
-	net.ParseIP()
+	fmt.Println("IntMax =", IntMax)
+	fmt.Println("IntMin =", IntMin)
 }
