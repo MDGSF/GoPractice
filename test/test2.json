@@ -1,0 +1,27 @@
+[{
+  "weather": "sunny",
+  "image_name": "rec_20170517_135411_00004684.jpg",
+  "scene_category": "highway",
+  "annotations": [
+	  {
+		  "data": {
+			  "point2d": [
+				  [
+					  515.2702557990351,
+					  323.9477503628448
+				  ],
+				  [
+					  844.2103829285265,
+					  620.4442249378596
+				  ]
+			  ]
+		  },
+		  "index": "620ee668-8d82-4635-b5aa-e903c5ff413e",
+		  "label": [
+			  "huakuang",
+			  "a"
+		  ],
+		  "type": "rect"
+	  }
+  ]
+}]

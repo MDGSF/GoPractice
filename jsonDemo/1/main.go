@@ -6,7 +6,8 @@ import (
 )
 
 type Student struct {
-	ID int
+	ID   int
+	Name string
 }
 
 func main() {
