@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	test3()
+	test2()
 }
 
 func test3() {
@@ -28,6 +28,11 @@ func test2() {
 		defer z.Close()
 
 		err := z.CompressOneFile("a.txt", "image/b.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = z.CompressData([]byte("Happy Day"), "h.txt")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -105,6 +110,20 @@ func (z *Zip) CompressOneFile(srcFileName, dstFileName string) error {
 	}
 
 	_, err = io.Copy(writer, f)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (z *Zip) CompressData(data []byte, dstFileName string) error {
+	writer, err := z.writer.Create(dstFileName)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(data)
 	if err != nil {
 		return err
 	}
