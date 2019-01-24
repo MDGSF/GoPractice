@@ -1,3 +1,3 @@
 ---
-tags: [aa,bb,cc]
+tags: [Aa,Bb,Cc]
 ---

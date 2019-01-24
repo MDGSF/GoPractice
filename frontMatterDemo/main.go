@@ -18,6 +18,7 @@ func main() {
 	}
 
 	for _, fileInfo := range entries {
+		fmt.Println("\nstart process file =", fileInfo.Name())
 		if strings.HasSuffix(fileInfo.Name(), ".md") {
 			path := filepath.Join(dir, fileInfo.Name())
 
@@ -63,17 +64,25 @@ func main() {
 
 						newline := "tags: ["
 						arr := strings.Split(tagsContent, ",")
-						for k, tag := range arr {
+						first := true
+						for _, tag := range arr {
 							newtag := strings.TrimSpace(tag)
+							if len(newtag) == 0 {
+								continue
+							}
+
 							newtag = strings.ToLower(newtag)
 							b := []byte(newtag)
 							b[0] = b[0] - ('a' - 'A')
 							newtag = string(b)
 
-							if k != 0 {
+							if first {
+								newline = newline + newtag
+								first = false
+							} else {
 								newline += ","
+								newline = newline + newtag
 							}
-							newline = newline + newtag
 						}
 						newline += "]"
 
