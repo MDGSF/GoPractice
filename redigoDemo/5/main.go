@@ -42,25 +42,6 @@ func main() {
 			continue
 		}
 
-		endchannel := make(chan bool)
-
-		go func() {
-			log.Info("ping goroutine start")
-			for {
-				t := time.NewTicker(10 * time.Second)
-				select {
-				case <-endchannel:
-					break
-				case <-t.C:
-					log.Println("send ping to server")
-					if err := psc.Ping("ping data"); err != nil {
-						log.Printf("ping err = %v\n", err)
-					}
-				}
-			}
-			log.Info("ping goroutine end")
-		}()
-
 		for conn.Err() == nil {
 			switch v := psc.Receive().(type) {
 			case redis.Message:
@@ -77,6 +58,5 @@ func main() {
 		}
 
 		conn.Close()
-		close(endchannel)
 	}
 }
