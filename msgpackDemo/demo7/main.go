@@ -11,7 +11,19 @@ import (
 )
 
 func main() {
-	test2()
+	test3()
+}
+
+func test3() {
+	data := []byte{131, 163, 97, 103, 101, 203, 64, 195, 136, 0, 0, 0, 0, 0, 163, 115, 117, 98, 131, 161, 97, 203, 64, 89, 0, 0, 0, 0, 0, 0, 161, 99, 129, 168, 108, 97, 110, 103, 117, 97, 103, 101, 164, 82, 117, 115, 116, 161, 98, 194, 164, 110, 97, 109, 101, 169, 104, 117, 97, 110, 103, 106, 105, 97, 110}
+
+	var output interface{}
+	err := msgpack.Unmarshal(data, &output)
+	if err != nil {
+		log.Error("err = %v", err)
+		return
+	}
+	fmt.Println("output = ", output)
 }
 
 func randInt(min int, max int) int {
