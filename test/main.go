@@ -1,12 +1,24 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"time"
+	"os"
+
+	"github.com/MDGSF/utils/log"
 )
 
 func main() {
-	t := time.Now()
-	fmt.Println("t = ", t.Unix())
-	fmt.Println("t = ", t.Nanosecond())
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		p := make([]byte, 1024)
+		readed, err := reader.Read(p)
+		if err != nil {
+			log.Error("err = %v", err)
+			continue
+		}
+		// fmt.Println(string(p[:readed]))
+		fmt.Println(p[:readed], string(p[:readed]))
+	}
 }
