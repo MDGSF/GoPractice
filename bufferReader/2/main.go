@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"unicode"
 
@@ -60,17 +61,62 @@ func NewTokenComment(data []byte) *TokenComment {
 }
 
 type TProcessor struct {
-	filename string
+	data     []byte
+	size     int
+	idx      int
+	row      int
+	column   int
+	lines    []int
 	state    int
-	r        *bufio.Reader
 	tokenOut chan interface{}
 }
 
-func NewProcessor(filename string) *TProcessor {
-	return &TProcessor{
-		filename: filename,
+func NewProcessor(data []byte) *TProcessor {
+	p := &TProcessor{
+		data:     data,
+		size:     len(data),
+		idx:      0,
+		row:      0,
+		column:   0,
+		lines:    make([]int, 0),
 		state:    StateInit,
 		tokenOut: make(chan interface{}, 16),
+	}
+	p.lines = append(p.lines, 0)
+	return p
+}
+
+func (p *TProcessor) ReadByte() (byte, error) {
+	var b byte
+	if p.idx >= p.size {
+		return b, errors.New("eof")
+	}
+	b = p.data[p.idx]
+	if b == '\n' {
+		p.row++
+		p.column = 0
+	} else {
+		p.column++
+	}
+	p.idx++
+	p.lines = append(p.lines, p.idx)
+	return b, nil
+}
+
+func (p *TProcessor) UnreadByte() error {
+	if p.idx <= 0 {
+		return errors.New("start of file")
+	}
+	p.idx--
+	return nil
+}
+
+func (p *TProcessor) ReadSlice(delim byte) ([]byte, error) {
+	for {
+		b, err := p.ReadByte()
+		if err != nil {
+			return err
+		}
 	}
 }
 
@@ -110,11 +156,6 @@ func (p *TProcessor) generateTokenStream() {
 
 	var err error
 
-	data, err := ioutil.ReadFile("test.ini")
-	if err != nil {
-		panic(err)
-	}
-
 	rb := bytes.NewReader(data)
 	p.r = bufio.NewReader(rb)
 
@@ -145,7 +186,7 @@ func (p *TProcessor) onStateInit() error {
 	var b byte
 
 	for {
-		b, err = p.r.ReadByte()
+		b, err = p.ReadByte()
 		if err != nil {
 			break
 		}
@@ -167,7 +208,7 @@ func (p *TProcessor) onStateInit() error {
 		}
 
 		if unicode.IsLetter(rune(b)) {
-			p.r.UnreadByte()
+			p.UnreadByte()
 			p.state = StateKeyValueLine
 			return nil
 		}
@@ -215,20 +256,70 @@ func (p *TProcessor) onStateKeyValueLine() error {
 }
 
 func (p *TProcessor) onStateValue() error {
-	data, err := p.r.ReadSlice('\n')
-	if err != nil {
-		return err
+	var err error
+	var b byte
+
+	for {
+		b, err = p.ReadByte()
+		if err != nil {
+			break
+		}
+
+		if unicode.IsSpace(rune(b)) {
+			continue
+		}
+
+		if b == '`' {
+			data, err := p.r.ReadSlice('`')
+			if err != nil {
+				return err
+			}
+
+			p.tokenOut <- NewToken(TokenTypeValue, bytes.TrimSpace(data[:len(data)-1]))
+
+			p.state = StateInit
+			return nil
+		}
+
+		if b == '"' {
+			data, err := p.r.ReadSlice('"')
+			if err != nil {
+				return err
+			}
+
+			p.tokenOut <- NewToken(TokenTypeValue, bytes.TrimSpace(data[:len(data)-1]))
+
+			p.state = StateInit
+
+			return nil
+		}
+
+		if unicode.IsLetter(rune(b)) {
+			p.UnreadByte()
+			data, err := p.r.ReadSlice('\n')
+			if err != nil {
+				return err
+			}
+
+			p.tokenOut <- NewToken(TokenTypeValue, bytes.TrimSpace(data[:len(data)-1]))
+
+			p.state = StateInit
+			return nil
+		}
 	}
 
-	p.tokenOut <- NewToken(TokenTypeValue, bytes.TrimSpace(data[:len(data)-1]))
-
-	p.state = StateInit
-	return nil
+	return err
 }
 
 func main() {
 	log.Info("main start")
 	defer log.Info("main end")
-	p := NewProcessor("test.ini")
+
+	data, err := ioutil.ReadFile("test.ini")
+	if err != nil {
+		panic(err)
+	}
+
+	p := NewProcessor(data)
 	p.run()
 }
