@@ -53,6 +53,45 @@ func st2Inner(arr []int, n int, fn []int) int {
 	return fn[n-1]
 }
 
+func st3(arr []int) int {
+	if len(arr) <= 0 {
+		return 0
+	}
+	if len(arr) == 1 {
+		return arr[0]
+	}
+	if len(arr) == 2 {
+		return max(arr[0], arr[1])
+	}
+	fn := make([]int, len(arr))
+	fn[0] = arr[0]
+	fn[1] = max(arr[0], arr[1])
+	for i := 2; i < len(arr); i++ {
+		fn[i] = max(arr[i]+fn[i-2], fn[i-1])
+	}
+	return fn[len(arr)-1]
+}
+
+func st4(arr []int) int {
+	if len(arr) <= 0 {
+		return 0
+	}
+	if len(arr) == 1 {
+		return arr[0]
+	}
+	if len(arr) == 2 {
+		return max(arr[0], arr[1])
+	}
+	p2 := arr[0]
+	p1 := max(arr[0], arr[1])
+	for i := 2; i < len(arr); i++ {
+		cur := max(arr[i]+p2, p1)
+		p2 = p1
+		p1 = cur
+	}
+	return p1
+}
+
 func main() {
 	fmt.Println("hello world")
 }
