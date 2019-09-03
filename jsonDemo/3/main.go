@@ -15,9 +15,15 @@ type TSubNode2 struct {
 	Name string `json:"name"`
 }
 
+type TSubNode3 struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 type TNode struct {
 	Sub  TSubNode  `json:"subnode,inline,omitempty"`
 	Sub2 TSubNode2 `json:"subnode2"`
+	Sub3 TSubNode3 `json:",inline"`
 	ID   int       `json:"id"`
 }
 
@@ -27,6 +33,7 @@ func main() {
 	}
 
 	data1, _ := json.Marshal(t1)
+	fmt.Println(string(data1))
 
 	t2 := &TNode{}
 	json.Unmarshal(data1, t2)
