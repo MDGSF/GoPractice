@@ -1,0 +1,16 @@
+{
+    "cookies": [
+        {
+            "name": "SESSION1.sig",
+            "value": "20w96EO4b-ycMWWViH5x9fyFxa4",
+            "path": "/",
+            "domain": "cloud.minieye.cc"
+        },
+        {
+            "name": "SESSION1",
+            "value": "eyJzaWQiOiI2MjJfMDUxNTA1X2YwY2U5ODljLTUxZjQtNDFlNi05NjQ3LTczYTQ2MWI4MzZlYyIsInVzZXJpZCI6NjIyLCJsb2dpbl9hdCI6IjIwMTktMDktMDVUMDc6MDU6NTkuODA5WiIsImxhc3RfdHMiOjE1Njc2Njk0ODc5MDksIl9leHBpcmUiOjE1OTkyMDU0ODgzMzksIl9tYXhBZ2UiOjMxNTM2MDAwMDAwfQ==",
+            "path": "/",
+            "domain": "cloud.minieye.cc"
+        }
+    ]
+}
