@@ -1,5 +1,40 @@
 /*
 https://www.geeksforgeeks.org/manachers-algorithm-linear-time-longest-palindromic-substring-part-1/
+
+example 1:
+s = "abababa"
+s.length = 7
+
+news = "|a|b|a|b|a|b|a|"
+news.length = 2 * s.length + 1 = 15
+
+string:         |   a   |   b   |   a   |   b   |   a   |   b   |   a   |
+LSP length L:   0   1   0   3   0   5   0   7   0   5   0   3   0   1   0
+Position:       0   1   2   3   4   5   6   7   8   9  10  11  12   13  14
+
+example 2:
+s = "abaaba"
+s.length = 6
+
+news = "|a|b|a|a|b|a|"
+news.length = 2 * s.length + 1 = 13
+
+string:        |   a   |   b   |   a   |   a   |   b   |   a   |
+LSP length L:  0   1   0   3   0   1   6   1   0   3   0   1   0
+Position:      0   1   2   3   4   5   6   7   8   9  10  11  12
+
+
+index(N): 0 -> N-1
+position(2*N+1): 0 -> 2*N
+
+L[i] = d means:
+1. substring from position i-d to i+d is a palindrome of length d. (in terms of position)
+2. substring from index (i-d)/2 to [(i+d)/2-1] is a palindrome of length d. (in terms of index)
+
+in string "abaaba" L[3] = 3 means:
+1. substring from position 3-3=0 to 3+3=6 is a palindrome of length 3.
+2. substring from index (3-3)/2=0 to [(3+3)/2-1]=2 is a palindrome of length 3.
+
 */
 package main
 
@@ -28,7 +63,7 @@ func longestPalindrome(s string) string {
 	L := make([]int, N)
 	L[0] = 0
 	L[1] = 1
-	centerPosition := 1
+	centerPosition := 1 // centerPosition 是已经计算完成的
 	centerRight := 2
 
 	var maxLPSLength int
@@ -36,7 +71,7 @@ func longestPalindrome(s string) string {
 
 	for i := 2; i < N; i++ {
 		needExpand := false
-		curRight := i
+		curRight := i // curRight 是正要计算的
 		curLeft := 2*centerPosition - curRight
 
 		diff := centerRight - curRight
