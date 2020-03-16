@@ -140,7 +140,13 @@ func processDirectory() {
 		if err != nil {
 			return err
 		}
+
 		if info.IsDir() {
+			return nil
+		}
+
+		fileExtention := path.Ext(filePathName)
+		if !isValidImageExt(fileExtention) {
 			return nil
 		}
 
@@ -150,16 +156,15 @@ func processDirectory() {
 			return err
 		}
 
-		fileExtention := path.Ext(filePathName)
 		var dstFileBaseName string
 		var dstPath string
 		if len(OutputDirectory) == 0 {
-			dstFileBaseName = strings.Split(filePathName, ".")[0] + NewImageSuffix
+			dstFileBaseName = strings.TrimSuffix(filePathName, fileExtention) + NewImageSuffix
 			dstPath = dstFileBaseName + fileExtention
 		} else {
 			relativeSubPathName := strings.TrimPrefix(filePathName, SourceImage)
 			newFilePathName := path.Join(OutputDirectory, relativeSubPathName)
-			dstFileBaseName = strings.Split(newFilePathName, ".")[0] + NewImageSuffix
+			dstFileBaseName = strings.TrimSuffix(newFilePathName, fileExtention) + NewImageSuffix
 			dstPath = dstFileBaseName + fileExtention
 			newFileDir := path.Dir(dstPath)
 			os.MkdirAll(newFileDir, 0755)
@@ -195,6 +200,13 @@ func processFile() {
 		log.Error("Save Marked Image failed: err = %v", err)
 		os.Exit(0)
 	}
+}
+
+func isValidImageExt(ext string) bool {
+	if ext == ".jpg" || ext == ".png" {
+		return true
+	}
+	return false
 }
 
 // SaveMarkedImage save marked image to dstPath
