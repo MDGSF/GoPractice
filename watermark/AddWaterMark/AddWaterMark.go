@@ -46,6 +46,8 @@ var RandomAngle float64
 
 var FontSize float64
 
+var WaterMarkType int
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 
@@ -62,6 +64,8 @@ func init() {
 	rootCmd.PersistentFlags().Uint8VarP(&A, "Alpha", "a", 20, "text color")
 
 	rootCmd.PersistentFlags().Float64VarP(&FontSize, "font", "f", 42, "font size")
+
+	rootCmd.PersistentFlags().IntVarP(&WaterMarkType, "WaterMarkType", "w", 0, "watermark type")
 
 	rootCmd.Flags().BoolP("version", "v", false, "Show AddWaterMark version.")
 
@@ -254,26 +258,65 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 	c.DrawImage(rect, img)
 
 	// make a fontStyle, which width is vg.Inch * 0.7
-	fontStyle, _ := vg.MakeFont("Courier", vg.Length(FontSize))
-
-	// repeat the markText
-	markTextWidth := fontStyle.Width(markText)
-	unitText := markText
-	for markTextWidth <= diagonal {
-		markText += strings.Repeat(" ", 3) + unitText
-		markTextWidth = fontStyle.Width(markText)
+	fontStyle, err := vg.MakeFont("Courier", vg.Length(FontSize))
+	if err != nil {
+		return nil, err
 	}
 
 	// set the color of markText
 	c.SetColor(color.RGBA{R, G, B, A})
 
-	// set a random angle between 0 and π/2
-	c.Rotate(RandomAngle)
+	if WaterMarkType == 0 {
+		// repeat the markText
+		markTextWidth := fontStyle.Width(markText)
+		unitText := markText
+		for markTextWidth <= diagonal {
+			markText += strings.Repeat(" ", 3) + unitText
+			markTextWidth = fontStyle.Width(markText)
+		}
 
-	// set the lineHeight and add the markText
-	lineHeight := fontStyle.Extents().Height * 1
-	for offset := -2 * diagonal; offset < 2*diagonal; offset += lineHeight {
-		c.FillString(fontStyle, vg.Point{X: 0, Y: offset}, markText)
+		// set a random angle between 0 and π/2
+		c.Rotate(RandomAngle)
+
+		// set the lineHeight and add the markText
+		lineHeight := fontStyle.Extents().Height * 1
+		for offset := -2 * diagonal; offset < 2*diagonal; offset += lineHeight {
+			c.FillString(fontStyle, vg.Point{X: 0, Y: offset}, markText)
+		}
+	} else if WaterMarkType == 1 {
+		// upper-left
+		// set the lineHeight and add the markText
+		lineHeight := fontStyle.Extents().Height * 1
+		c.FillString(fontStyle, vg.Point{
+			X: diagonal/2 - w/2 + 20,
+			Y: diagonal/2 + h/2 - lineHeight,
+		}, markText)
+	} else if WaterMarkType == 2 {
+		// upper-right
+		// set the lineHeight and add the markText
+		markTextWidth := fontStyle.Width(markText)
+		lineHeight := fontStyle.Extents().Height * 1
+		c.FillString(fontStyle, vg.Point{
+			X: diagonal/2 + w/2 - markTextWidth - 20,
+			Y: diagonal/2 + h/2 - lineHeight,
+		}, markText)
+	} else if WaterMarkType == 3 {
+		// bottom-right
+		// set the lineHeight and add the markText
+		markTextWidth := fontStyle.Width(markText)
+		//lineHeight := fontStyle.Extents().Height * 1
+		c.FillString(fontStyle, vg.Point{
+			X: diagonal/2 + w/2 - markTextWidth - 20,
+			Y: diagonal/2 - h/2 + 20,
+		}, markText)
+	} else if WaterMarkType == 4 {
+		// bottom-left
+		// set the lineHeight and add the markText
+		//lineHeight := fontStyle.Extents().Height * 1
+		c.FillString(fontStyle, vg.Point{
+			X: diagonal/2 - w/2 + 20,
+			Y: diagonal/2 - h/2 + 20,
+		}, markText)
 	}
 
 	// canvas writeto jpeg

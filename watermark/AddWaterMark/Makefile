@@ -42,6 +42,13 @@ AddWaterMark:
 	strip ./bin/$@
 	cp ./bin/$@ ./$@
 
+AddWaterMark_win:
+	GOOS=windows \
+	GOARCH=amd64 \
+	$(GOBUILD) \
+		-ldflags $(GLOBAL_FLAGS) \
+		-o ./bin/AddWaterMark.exe ./main/main.go
+
 .PHONY: clean
 clean:
 	$(GOCLEAN)
