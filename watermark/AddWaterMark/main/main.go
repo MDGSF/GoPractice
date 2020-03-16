@@ -1,7 +1,7 @@
 package main
 
-import "github.com/MDGSF/AddWaterMark"
+import "github.com/MDGSF/watermark"
 
 func main() {
-	AddWaterMark.Execute()
+	watermark.Execute()
 }

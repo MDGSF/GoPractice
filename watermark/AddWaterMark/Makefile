@@ -26,8 +26,8 @@ release: clean
 release: FLAG=$(RELEASEFLAGS)
 release: AddWaterMark
 
-GLOBAL_VERSION = 0.0.1
-GLOBAL_MOD = github.com/MDGSF/AddWaterMark
+GLOBAL_VERSION = 0.0.2
+GLOBAL_MOD = github.com/MDGSF/watermark
 
 GLOBAL_FLAGS = "-X $(GLOBAL_MOD).Version=$(GLOBAL_VERSION) \
 	-X $(GLOBAL_MOD).BuildTime=$(BUILD_TIME)"

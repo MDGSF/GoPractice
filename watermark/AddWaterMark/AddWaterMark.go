@@ -1,4 +1,4 @@
-package AddWaterMark
+package watermark
 
 import (
 	"bytes"
@@ -145,8 +145,8 @@ func processDirectory() {
 			return nil
 		}
 
-		fileExtention := path.Ext(filePathName)
-		if !isValidImageExt(fileExtention) {
+		fileExtension := path.Ext(filePathName)
+		if !isValidImageExt(fileExtension) {
 			return nil
 		}
 
@@ -159,18 +159,18 @@ func processDirectory() {
 		var dstFileBaseName string
 		var dstPath string
 		if len(OutputDirectory) == 0 {
-			dstFileBaseName = strings.TrimSuffix(filePathName, fileExtention) + NewImageSuffix
-			dstPath = dstFileBaseName + fileExtention
+			dstFileBaseName = strings.TrimSuffix(filePathName, fileExtension) + NewImageSuffix
+			dstPath = dstFileBaseName + fileExtension
 		} else {
 			relativeSubPathName := strings.TrimPrefix(filePathName, SourceImage)
 			newFilePathName := path.Join(OutputDirectory, relativeSubPathName)
-			dstFileBaseName = strings.TrimSuffix(newFilePathName, fileExtention) + NewImageSuffix
-			dstPath = dstFileBaseName + fileExtention
+			dstFileBaseName = strings.TrimSuffix(newFilePathName, fileExtension) + NewImageSuffix
+			dstPath = dstFileBaseName + fileExtension
 			newFileDir := path.Dir(dstPath)
 			os.MkdirAll(newFileDir, 0755)
 		}
 
-		err = SaveMarkedImage(img, fileExtention, dstPath)
+		err = SaveMarkedImage(img, fileExtension, dstPath)
 		if err != nil {
 			log.Error("Save Marked Image failed: err = %v", err)
 			return err
@@ -191,11 +191,16 @@ func processFile() {
 		os.Exit(0)
 	}
 
-	fileExtention := path.Ext(SourceImage)
-	dstFileBaseName := strings.Split(SourceImage, ".")[0] + "_marked"
-	dstPath := dstFileBaseName + fileExtention
+	fileExtension := path.Ext(SourceImage)
+	if !isValidImageExt(fileExtension) {
+		log.Error("Invalid file extension= %v", err)
+		os.Exit(0)
+	}
 
-	err = SaveMarkedImage(img, fileExtention, dstPath)
+	dstFileBaseName := strings.TrimSuffix(SourceImage, fileExtension) + "_marked"
+	dstPath := dstFileBaseName + fileExtension
+
+	err = SaveMarkedImage(img, fileExtension, dstPath)
 	if err != nil {
 		log.Error("Save Marked Image failed: err = %v", err)
 		os.Exit(0)
