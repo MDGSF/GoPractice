@@ -48,4 +48,5 @@ clean:
 	-rm -rf AddWaterMark
 	-rm -rf *.jpg
 	-rm -rf ./bin
-
+	-find . -name "*_marked.jpg" -type f -print -exec rm -rf {} \; 
+	-find . -name "*_marked.png" -type f -print -exec rm -rf {} \; 

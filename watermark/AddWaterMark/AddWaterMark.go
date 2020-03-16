@@ -3,10 +3,10 @@ package AddWaterMark
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"strings"
 
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -34,6 +34,8 @@ var BuildTime = ""
 
 var SourceImage = ""
 var WaterMarkText = ""
+var OutputDirectory = ""
+var NewImageSuffix = ""
 
 var R uint8
 var G uint8
@@ -51,6 +53,8 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&SourceImage, "source", "s", "", "image file or directory")
 	rootCmd.PersistentFlags().StringVarP(&WaterMarkText, "text", "t", "minieye", "watermark text")
+	rootCmd.PersistentFlags().StringVarP(&OutputDirectory, "output", "o", "", "output directory")
+	rootCmd.PersistentFlags().StringVarP(&NewImageSuffix, "suffix", "e", "_marked", "new image suffix")
 
 	rootCmd.PersistentFlags().Uint8VarP(&R, "Red", "r", 255, "text color")
 	rootCmd.PersistentFlags().Uint8VarP(&G, "Green", "g", 255, "text color")
@@ -66,10 +70,6 @@ func init() {
 
 func initConfig() {
 	initVersionFlags()
-
-	// RandomAngle = math.Pi * rand.Float64() / 2
-	// log.Info("RandomAngle = %v", RandomAngle)
-	RandomAngle = 0.6
 }
 
 func initVersionFlags() {
@@ -113,6 +113,15 @@ var rootCmd = &cobra.Command{
 }
 
 func start() {
+
+	// RandomAngle = math.Pi * rand.Float64() / 2
+	// log.Info("RandomAngle = %v", RandomAngle)
+	RandomAngle = 0.6
+
+	if len(OutputDirectory) > 0 {
+		os.MkdirAll(OutputDirectory, 0755)
+	}
+
 	if utils.IsDir(SourceImage) {
 		processDirectory()
 	} else {
@@ -121,24 +130,48 @@ func start() {
 }
 
 func processDirectory() {
-	files, _ := ioutil.ReadDir(SourceImage)
-	for _, oneFile := range files {
-		img, err := WaterMark(path.Join(SourceImage, oneFile.Name()), WaterMarkText)
+
+	err := filepath.Walk(SourceImage, func(filePathName string, info os.FileInfo, err error) error {
+		log.Info("filePathName = %v, name = %v", filePathName, info.Name())
 		if err != nil {
-			log.Error("Add Water Mark failed: err = %v", err)
-			continue
+			return err
+		}
+		if info.IsDir() {
+			return nil
 		}
 
-		fileExtention := path.Ext(oneFile.Name())
-		dstFileBaseName := strings.Split(oneFile.Name(), ".")[0] + "_marked"
-		dstFileName := dstFileBaseName + fileExtention
-		dstPath := path.Join(SourceImage, dstFileName)
+		img, err := WaterMark(filePathName, WaterMarkText)
+		if err != nil {
+			log.Error("Add Water Mark failed: err = %v", err)
+			return err
+		}
+
+		fileExtention := path.Ext(filePathName)
+		var dstFileBaseName string
+		var dstPath string
+		if len(OutputDirectory) == 0 {
+			dstFileBaseName = strings.Split(filePathName, ".")[0] + NewImageSuffix
+			dstPath = dstFileBaseName + fileExtention
+		} else {
+			relativeSubPathName := strings.TrimPrefix(filePathName, SourceImage)
+			newFilePathName := path.Join(OutputDirectory, relativeSubPathName)
+			dstFileBaseName = strings.Split(newFilePathName, ".")[0] + NewImageSuffix
+			dstPath = dstFileBaseName + fileExtention
+			newFileDir := path.Dir(dstPath)
+			os.MkdirAll(newFileDir, 0755)
+		}
 
 		err = SaveMarkedImage(img, fileExtention, dstPath)
 		if err != nil {
 			log.Error("Save Marked Image failed: err = %v", err)
-			continue
+			return err
 		}
+
+		return nil
+	})
+	if err != nil {
+		log.Error("%v", err)
+		return
 	}
 }
 
