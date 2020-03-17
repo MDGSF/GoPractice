@@ -81,6 +81,9 @@ var WaterMarkType int
 // WorkerThreadNumber worker thread number
 var WorkerThreadNumber int
 
+// LogLevel log level
+var LogLevel string
+
 var startTime time.Time
 
 func init() {
@@ -100,9 +103,14 @@ func init() {
 
 	rootCmd.PersistentFlags().Float64VarP(&FontSize, "font", "f", 42, "font size")
 
+	rootCmd.PersistentFlags().Float64VarP(&RandomAngle, "angle", "n", 0.6, "text angle")
+
 	rootCmd.PersistentFlags().IntVarP(&WaterMarkType, "WaterMarkType", "w", 0, "watermark type")
 
 	rootCmd.PersistentFlags().IntVarP(&WorkerThreadNumber, "workers", "k", 0, "worker thread number")
+
+	rootCmd.PersistentFlags().StringVarP(&LogLevel, "log", "l", "info",
+		"log level (available: verbose, debug, info, warn, error)")
 
 	rootCmd.Flags().BoolP("version", "v", false, "Show AddWaterMark version.")
 
@@ -155,12 +163,12 @@ var rootCmd = &cobra.Command{
 
 func start() {
 
+	log.SetLevel(log.NameToLevel(LogLevel))
+
 	startTime = time.Now()
 	log.Info("startTime = %v", startTime)
 
-	// RandomAngle = math.Pi * rand.Float64() / 2
-	// log.Info("RandomAngle = %v", RandomAngle)
-	RandomAngle = 0.6
+	log.Verbose("RandomAngle = %v", RandomAngle)
 
 	if len(OutputDirectory) > 0 {
 		os.MkdirAll(OutputDirectory, 0755)
@@ -169,13 +177,16 @@ func start() {
 	if WorkerThreadNumber <= 0 || WorkerThreadNumber > runtime.NumCPU() {
 		WorkerThreadNumber = runtime.NumCPU()
 	}
-	log.Info("WorkerThreadNumber = %v", WorkerThreadNumber)
+	log.Verbose("WorkerThreadNumber = %v", WorkerThreadNumber)
 
 	if utils.IsDir(SourceImage) {
 		processDirectory()
 	} else {
 		processFile()
 	}
+
+	endTime := time.Now()
+	log.Info("endTime = %v, elapsed = %v", endTime, endTime.Sub(startTime))
 }
 
 func processDirectory() {
@@ -257,9 +268,6 @@ func processDirectory() {
 
 	close(in)
 	wg.Wait()
-
-	endTime := time.Now()
-	log.Info("endTime = %v, elapsed = %v", endTime, endTime.Sub(startTime))
 }
 
 func processFile() {
@@ -342,8 +350,14 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 	h := vg.Length(bounds.Max.Y) * vg.Inch / vgimg.DefaultDPI
 	diagonal := vg.Length(math.Sqrt(float64(w*w + h*h)))
 
+	log.Verbose("bounds = %v", bounds)
+	log.Verbose("bounds.Size() = %v", bounds.Size())
+	log.Verbose("w = %v", w)
+	log.Verbose("h = %v", h)
+	log.Verbose("diagonal = %v", diagonal)
+
 	// create a canvas, which width and height are diagonal
-	c := vgimg.New(diagonal, diagonal)
+	canvas := vgimg.New(diagonal, diagonal)
 
 	// draw image on the center of canvas
 	rect := vg.Rectangle{}
@@ -351,7 +365,7 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 	rect.Min.Y = diagonal/2 - h/2
 	rect.Max.X = diagonal/2 + w/2
 	rect.Max.Y = diagonal/2 + h/2
-	c.DrawImage(rect, img)
+	canvas.DrawImage(rect, img)
 
 	// make a fontStyle, which width is vg.Inch * 0.7
 	fontStyle, err := vg.MakeFont("Courier", vg.Length(FontSize))
@@ -360,7 +374,7 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 	}
 
 	// set the color of markText
-	c.SetColor(color.RGBA{R, G, B, A})
+	canvas.SetColor(color.RGBA{R, G, B, A})
 
 	if WaterMarkType == 0 {
 		// repeat the markText
@@ -372,18 +386,18 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 		}
 
 		// set a random angle between 0 and π/2
-		c.Rotate(RandomAngle)
+		canvas.Rotate(RandomAngle)
 
 		// set the lineHeight and add the markText
 		lineHeight := fontStyle.Extents().Height * 1
 		for offset := -2 * diagonal; offset < 2*diagonal; offset += lineHeight {
-			c.FillString(fontStyle, vg.Point{X: 0, Y: offset}, markText)
+			canvas.FillString(fontStyle, vg.Point{X: 0, Y: offset}, markText)
 		}
 	} else if WaterMarkType == 1 {
 		// upper-left
 		// set the lineHeight and add the markText
 		lineHeight := fontStyle.Extents().Height * 1
-		c.FillString(fontStyle, vg.Point{
+		canvas.FillString(fontStyle, vg.Point{
 			X: diagonal/2 - w/2 + 20,
 			Y: diagonal/2 + h/2 - lineHeight,
 		}, markText)
@@ -392,7 +406,7 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 		// set the lineHeight and add the markText
 		markTextWidth := fontStyle.Width(markText)
 		lineHeight := fontStyle.Extents().Height * 1
-		c.FillString(fontStyle, vg.Point{
+		canvas.FillString(fontStyle, vg.Point{
 			X: diagonal/2 + w/2 - markTextWidth - 20,
 			Y: diagonal/2 + h/2 - lineHeight,
 		}, markText)
@@ -401,7 +415,7 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 		// set the lineHeight and add the markText
 		markTextWidth := fontStyle.Width(markText)
 		//lineHeight := fontStyle.Extents().Height * 1
-		c.FillString(fontStyle, vg.Point{
+		canvas.FillString(fontStyle, vg.Point{
 			X: diagonal/2 + w/2 - markTextWidth - 20,
 			Y: diagonal/2 - h/2 + 20,
 		}, markText)
@@ -409,7 +423,7 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 		// bottom-left
 		// set the lineHeight and add the markText
 		//lineHeight := fontStyle.Extents().Height * 1
-		c.FillString(fontStyle, vg.Point{
+		canvas.FillString(fontStyle, vg.Point{
 			X: diagonal/2 - w/2 + 20,
 			Y: diagonal/2 - h/2 + 20,
 		}, markText)
@@ -418,21 +432,28 @@ func WaterMark(filepath, markText string) (image.Image, error) {
 	// canvas writeto jpeg
 	// canvas.img is private
 	// so use a buffer to transfer
-	jc := vgimg.PngCanvas{Canvas: c}
-	buff := new(bytes.Buffer)
-	jc.WriteTo(buff)
-	img, _, err = image.Decode(buff)
+	pngCanvas := vgimg.PngCanvas{Canvas: canvas}
+	pngBuffer := new(bytes.Buffer)
+	pngCanvas.WriteTo(pngBuffer)
+	img, _, err = image.Decode(pngBuffer)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the center point of the image
-	ctp := int(diagonal * vgimg.DefaultDPI / vg.Inch / 2)
+	sideLength := int(diagonal * vgimg.DefaultDPI / vg.Inch)
+	halfSideLength := sideLength / 2
 
 	// cutout the marked image
 	size := bounds.Size()
-	bounds = image.Rect(ctp-size.X/2, ctp-size.Y/2, ctp+size.X/2, ctp+size.Y/2)
-	rv := image.NewRGBA(bounds)
-	draw.Draw(rv, bounds, img, bounds.Min, draw.Src)
-	return rv, nil
+	dstBounds := image.Rect(halfSideLength-size.X/2, halfSideLength-size.Y/2,
+		halfSideLength+size.X/2, halfSideLength+size.Y/2)
+	dstImage := image.NewRGBA(dstBounds)
+	draw.Draw(dstImage, dstBounds, img, dstBounds.Min, draw.Src)
+
+	log.Verbose("sideLength = %v", sideLength)
+	log.Verbose("dstBounds = %v", dstBounds)
+	log.Verbose("dstBounds.Size() = %v", dstBounds.Size())
+
+	return dstImage, nil
 }
