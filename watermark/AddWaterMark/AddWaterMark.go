@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"os"
 	"path"
@@ -28,25 +29,59 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Program program name
 var Program = "AddWaterMark"
+
+// Version version number
 var Version = "0.0.1"
+
+// BuildTime build time
 var BuildTime = ""
 
+// SourceImage source file or directory
 var SourceImage = ""
+
+// WaterMarkText watermark text
 var WaterMarkText = ""
+
+// OutputDirectory new image output directory
 var OutputDirectory = ""
+
+// NewImageSuffix new image suffix
 var NewImageSuffix = ""
 
+// R RGBA red
 var R uint8
+
+// G RGBA Green
 var G uint8
+
+// B RGBA Blue
 var B uint8
+
+// A RGBA Alpha
 var A uint8
 
+// RandomAngle text random angle
 var RandomAngle float64
 
+// FontSize text font size
 var FontSize float64
 
+/*
+WaterMarkType watermark type
+0: default
+1: top-left
+2: top-right
+3: bottom-right
+4: bottom-left
+*/
 var WaterMarkType int
+
+// WorkerThreadNumber worker thread number
+var WorkerThreadNumber int
+
+var startTime time.Time
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -66,6 +101,8 @@ func init() {
 	rootCmd.PersistentFlags().Float64VarP(&FontSize, "font", "f", 42, "font size")
 
 	rootCmd.PersistentFlags().IntVarP(&WaterMarkType, "WaterMarkType", "w", 0, "watermark type")
+
+	rootCmd.PersistentFlags().IntVarP(&WorkerThreadNumber, "workers", "k", 0, "worker thread number")
 
 	rootCmd.Flags().BoolP("version", "v", false, "Show AddWaterMark version.")
 
@@ -118,6 +155,9 @@ var rootCmd = &cobra.Command{
 
 func start() {
 
+	startTime = time.Now()
+	log.Info("startTime = %v", startTime)
+
 	// RandomAngle = math.Pi * rand.Float64() / 2
 	// log.Info("RandomAngle = %v", RandomAngle)
 	RandomAngle = 0.6
@@ -125,6 +165,11 @@ func start() {
 	if len(OutputDirectory) > 0 {
 		os.MkdirAll(OutputDirectory, 0755)
 	}
+
+	if WorkerThreadNumber <= 0 || WorkerThreadNumber > runtime.NumCPU() {
+		WorkerThreadNumber = runtime.NumCPU()
+	}
+	log.Info("WorkerThreadNumber = %v", WorkerThreadNumber)
 
 	if utils.IsDir(SourceImage) {
 		processDirectory()
@@ -135,8 +180,57 @@ func start() {
 
 func processDirectory() {
 
+	wg := sync.WaitGroup{}
+	in := make(chan string, 1)
+	for i := 0; i < WorkerThreadNumber; i++ {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup, in chan string) {
+			defer wg.Done()
+			for {
+				select {
+				case filePathName, ok := <-in:
+					if !ok {
+						return
+					}
+
+					fileExtension := path.Ext(filePathName)
+					if !isValidImageExt(fileExtension) {
+						continue
+					}
+
+					img, err := WaterMark(filePathName, WaterMarkText)
+					if err != nil {
+						log.Error("Add Water Mark failed: err = %v", err)
+						continue
+					}
+
+					var dstFileBaseName string
+					var dstPath string
+					if len(OutputDirectory) == 0 {
+						dstFileBaseName = strings.TrimSuffix(filePathName, fileExtension) + NewImageSuffix
+						dstPath = dstFileBaseName + fileExtension
+					} else {
+						relativeSubPathName := strings.TrimPrefix(filePathName, SourceImage)
+						newFilePathName := path.Join(OutputDirectory, relativeSubPathName)
+						dstFileBaseName = strings.TrimSuffix(newFilePathName, fileExtension) + NewImageSuffix
+						dstPath = dstFileBaseName + fileExtension
+						newFileDir := path.Dir(dstPath)
+						os.MkdirAll(newFileDir, 0755)
+					}
+
+					err = SaveMarkedImage(img, fileExtension, dstPath)
+					if err != nil {
+						log.Error("Save Marked Image failed: err = %v", err)
+						continue
+					}
+				}
+			}
+		}(&wg, in)
+	}
+
+	count := 0
 	err := filepath.Walk(SourceImage, func(filePathName string, info os.FileInfo, err error) error {
-		log.Info("filePathName = %v, name = %v", filePathName, info.Name())
+
 		if err != nil {
 			return err
 		}
@@ -145,36 +239,14 @@ func processDirectory() {
 			return nil
 		}
 
-		fileExtension := path.Ext(filePathName)
-		if !isValidImageExt(fileExtension) {
-			return nil
+		count++
+		if count%100 == 0 {
+			curTime := time.Now()
+			log.Info("processed image number [%v], curTime = %v, elapsed = %v",
+				count, curTime, curTime.Sub(startTime))
 		}
 
-		img, err := WaterMark(filePathName, WaterMarkText)
-		if err != nil {
-			log.Error("Add Water Mark failed: err = %v", err)
-			return err
-		}
-
-		var dstFileBaseName string
-		var dstPath string
-		if len(OutputDirectory) == 0 {
-			dstFileBaseName = strings.TrimSuffix(filePathName, fileExtension) + NewImageSuffix
-			dstPath = dstFileBaseName + fileExtension
-		} else {
-			relativeSubPathName := strings.TrimPrefix(filePathName, SourceImage)
-			newFilePathName := path.Join(OutputDirectory, relativeSubPathName)
-			dstFileBaseName = strings.TrimSuffix(newFilePathName, fileExtension) + NewImageSuffix
-			dstPath = dstFileBaseName + fileExtension
-			newFileDir := path.Dir(dstPath)
-			os.MkdirAll(newFileDir, 0755)
-		}
-
-		err = SaveMarkedImage(img, fileExtension, dstPath)
-		if err != nil {
-			log.Error("Save Marked Image failed: err = %v", err)
-			return err
-		}
+		in <- filePathName
 
 		return nil
 	})
@@ -182,6 +254,12 @@ func processDirectory() {
 		log.Error("%v", err)
 		return
 	}
+
+	close(in)
+	wg.Wait()
+
+	endTime := time.Now()
+	log.Info("endTime = %v, elapsed = %v", endTime, endTime.Sub(startTime))
 }
 
 func processFile() {
@@ -208,7 +286,8 @@ func processFile() {
 }
 
 func isValidImageExt(ext string) bool {
-	if ext == ".jpg" || ext == ".png" {
+	ext = strings.ToLower(ext)
+	if ext == ".jpg" || ext == ".jpeg" || ext == ".png" {
 		return true
 	}
 	return false

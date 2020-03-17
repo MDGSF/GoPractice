@@ -25,6 +25,7 @@ Flags:
   -e, --suffix string       new image suffix (default "_marked")
   -t, --text string         watermark text (default "minieye")
   -v, --version             Show AddWaterMark version.
+  -k, --workers int         worker thread number
 
 Use "AddWaterMark [command] --help" for more information about a command.
 ```
@@ -61,6 +62,10 @@ Use "AddWaterMark [command] --help" for more information about a command.
 -w 2 右上角
 -w 3 右下角
 -w 4 左下角
+
+-k 设置工作线程的数量，这个默认值是 cpu 的数量。
+取值范围从 0 ~ cpu数量。取值至少为 1，也就是一个线程。
+一般设置为 3、4 个工作线程时，速度较快。
 ```
 
 ## 例子
