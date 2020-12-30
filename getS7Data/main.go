@@ -12,7 +12,7 @@ import (
 
 var gDB *gorm.DB
 
-var deviceID string = "e8d78a431a716265"
+var deviceID string = "2bd40a1228c57f7b"
 
 func main() {
 
@@ -37,13 +37,13 @@ func main() {
 }
 
 func queryAdas() {
-	for i := 1; i <= 22; i++ {
+	for i := 1; i <= 18; i++ {
 		queryOneDayAdas(i)
 	}
 }
 
 func queryOneDayAdas(day int) {
-	tableName := fmt.Sprintf("adas_events_202010%+02v", day)
+	tableName := fmt.Sprintf("adas_events_202011%+02v", day)
 
 	curDB := gDB.Table(tableName).Select("*")
 	curDB = curDB.Where("device = ?", deviceID)
@@ -51,18 +51,18 @@ func queryOneDayAdas(day int) {
 	var count int
 	curDB.Count(&count)
 
-	daystr := fmt.Sprintf("2020_10_%+02v", day)
+	daystr := fmt.Sprintf("2020_11_%+02v", day)
 	fmt.Printf("adas event, %v, count = %v\n", daystr, count)
 }
 
 func queryDms() {
-	for i := 1; i <= 22; i++ {
+	for i := 1; i <= 18; i++ {
 		queryOneDayDms(i)
 	}
 }
 
 func queryOneDayDms(day int) {
-	tableName := fmt.Sprintf("dms_events_202010%+02v", day)
+	tableName := fmt.Sprintf("dms_events_202011%+02v", day)
 
 	curDB := gDB.Table(tableName).Select("*")
 	curDB = curDB.Where("device = ?", deviceID)
@@ -70,18 +70,18 @@ func queryOneDayDms(day int) {
 	var count int
 	curDB.Count(&count)
 
-	daystr := fmt.Sprintf("2020_10_%+02v", day)
+	daystr := fmt.Sprintf("2020_11_%+02v", day)
 	fmt.Printf("dms event, %v, count = %v\n", daystr, count)
 }
 
 func queryStatus() {
-	for i := 1; i <= 22; i++ {
+	for i := 1; i <= 18; i++ {
 		queryOneDayStatus(i)
 	}
 }
 
 func queryOneDayStatus(day int) {
-	tableName := fmt.Sprintf("adas_status_202010%+02v", day)
+	tableName := fmt.Sprintf("adas_status_202011%+02v", day)
 
 	curDB := gDB.Table(tableName).Select("*")
 	curDB = curDB.Where("device = ?", deviceID)
@@ -89,6 +89,6 @@ func queryOneDayStatus(day int) {
 	var count int
 	curDB.Count(&count)
 
-	daystr := fmt.Sprintf("2020_10_%+02v", day)
+	daystr := fmt.Sprintf("2020_11_%+02v", day)
 	fmt.Printf("status, %v, count = %v\n", daystr, count)
 }
