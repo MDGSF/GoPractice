@@ -6,11 +6,21 @@ import (
 	"time"
 
 	"github.com/MDGSF/utils/log"
+	"github.com/MDGSF/utils/log/mwriter"
 )
 
 var gStart time.Time
 
 func processImage(startTime time.Time) {
+	start := time.Now()
+	log.Info("[%v] processImage start = %v", startTime, start)
+	defer func() {
+		elapsed := time.Since(start)
+		log.Info("[%v] processImage end, time elapsed = %v", startTime, elapsed)
+	}()
+
+	tryTimes := 0
+
 	for i := 0; i < 365; i++ {
 
 		forStart := time.Now()
@@ -37,7 +47,17 @@ func processImage(startTime time.Time) {
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Error("curTimeStr = %v, err = %v", curTimeStr, err)
-			break
+
+			if tryTimes > 3 {
+				tryTimes = 0
+			} else {
+				tryTimes += 1
+				i -= 1
+			}
+
+			time.Sleep(time.Second)
+
+			continue
 		}
 		log.Info("%v", string(output))
 		log.Info("for end, forElapsed = %v, gElapsed = %v",
@@ -46,6 +66,15 @@ func processImage(startTime time.Time) {
 }
 
 func processVideo(startTime time.Time) {
+	start := time.Now()
+	log.Info("[%v] processVideo start = %v", startTime, start)
+	defer func() {
+		elapsed := time.Since(start)
+		log.Info("[%v] processVideo end, time elapsed = %v", startTime, elapsed)
+	}()
+
+	tryTimes := 0
+
 	for i := 0; i < 365; i++ {
 
 		forStart := time.Now()
@@ -72,7 +101,17 @@ func processVideo(startTime time.Time) {
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Error("curTimeStr = %v, err = %v", curTimeStr, err)
-			break
+
+			if tryTimes > 3 {
+				tryTimes = 0
+			} else {
+				tryTimes += 1
+				i -= 1
+			}
+
+			time.Sleep(time.Second)
+
+			continue
 		}
 		log.Info("%v", string(output))
 		log.Info("for end, forElapsed = %v, gElapsed = %v",
@@ -81,22 +120,46 @@ func processVideo(startTime time.Time) {
 }
 
 func process2018() {
+	start := time.Now()
+	log.Info("process2018 start = %v", start)
+	defer func() {
+		elapsed := time.Since(start)
+		log.Info("process2018 end, time elapsed = %v", elapsed)
+	}()
+
 	startTime := time.Date(2018, 1, 1, 0, 0, 0, 0, time.Local)
-	//processImage(startTime)
+	processImage(startTime)
 	processVideo(startTime)
 }
 
 func process2019() {
+	start := time.Now()
+	log.Info("process2019 start = %v", start)
+	defer func() {
+		elapsed := time.Since(start)
+		log.Info("process2019 end, time elapsed = %v", elapsed)
+	}()
+
 	startTime := time.Date(2019, 1, 1, 0, 0, 0, 0, time.Local)
 	processImage(startTime)
+	processVideo(startTime)
 }
 
 func main() {
+	w := mwriter.New("/home/huangjian/oss_process.log",
+		10*1024*1024,
+		time.Duration(4320*int64(time.Minute)))
+	log.SetOutput(w)
+	log.SetLevel(log.NameToLevel("info"))
+	log.SetIsTerminal(log.NotTerminal)
+
 	gStart = time.Now()
+	log.Info("main gStart = %v", gStart)
 	defer func() {
 		elapsed := time.Since(gStart)
-		log.Info("time used: %v", elapsed)
+		log.Info("main end, time elapsed = %v", elapsed)
 	}()
 
 	process2018()
+	process2019()
 }
