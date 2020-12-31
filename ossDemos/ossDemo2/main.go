@@ -11,7 +11,7 @@ import (
 
 var gStart time.Time
 
-func processImage(startTime time.Time) {
+func processImage(startTime time.Time, days int) {
 	start := time.Now()
 	log.Info("[%v] processImage start = %v", startTime, start)
 	defer func() {
@@ -21,7 +21,7 @@ func processImage(startTime time.Time) {
 
 	tryTimes := 0
 
-	for i := 0; i < 365; i++ {
+	for i := 0; i < days; i++ {
 
 		forStart := time.Now()
 
@@ -65,7 +65,7 @@ func processImage(startTime time.Time) {
 	}
 }
 
-func processVideo(startTime time.Time) {
+func processVideo(startTime time.Time, days int) {
 	start := time.Now()
 	log.Info("[%v] processVideo start = %v", startTime, start)
 	defer func() {
@@ -75,7 +75,7 @@ func processVideo(startTime time.Time) {
 
 	tryTimes := 0
 
-	for i := 0; i < 365; i++ {
+	for i := 0; i < days; i++ {
 
 		forStart := time.Now()
 
@@ -119,30 +119,31 @@ func processVideo(startTime time.Time) {
 	}
 }
 
-func process2018() {
+func process(name string, startTime time.Time, days int) {
 	start := time.Now()
-	log.Info("process2018 start = %v", start)
+	log.Info("%v start = %v", name, start)
 	defer func() {
 		elapsed := time.Since(start)
-		log.Info("process2018 end, time elapsed = %v", elapsed)
+		log.Info("%v end, time elapsed = %v", name, elapsed)
 	}()
 
+	processImage(startTime, days)
+	processVideo(startTime, days)
+}
+
+func process2018() {
 	startTime := time.Date(2018, 1, 1, 0, 0, 0, 0, time.Local)
-	processImage(startTime)
-	processVideo(startTime)
+	process("process2018", startTime, 365)
 }
 
 func process2019() {
-	start := time.Now()
-	log.Info("process2019 start = %v", start)
-	defer func() {
-		elapsed := time.Since(start)
-		log.Info("process2019 end, time elapsed = %v", elapsed)
-	}()
-
 	startTime := time.Date(2019, 1, 1, 0, 0, 0, 0, time.Local)
-	processImage(startTime)
-	processVideo(startTime)
+	process("process2019", startTime, 365)
+}
+
+func process2020() {
+	startTime := time.Date(2019, 1, 1, 0, 0, 0, 0, time.Local)
+	process("process2020", startTime, 304) // left 2 months
 }
 
 func main() {
@@ -162,4 +163,5 @@ func main() {
 
 	process2018()
 	process2019()
+	process2020()
 }
