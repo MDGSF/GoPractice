@@ -142,7 +142,7 @@ func process2019() {
 }
 
 func process2020() {
-	startTime := time.Date(2019, 1, 1, 0, 0, 0, 0, time.Local)
+	startTime := time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)
 	process("process2020", startTime, 304) // left 2 months
 }
 
@@ -161,7 +161,7 @@ func main() {
 		log.Info("main end, time elapsed = %v", elapsed)
 	}()
 
-	process2018()
-	process2019()
+	//process2018()
+	//process2019()
 	process2020()
 }
