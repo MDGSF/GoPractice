@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os/exec"
 	"time"
@@ -46,7 +47,8 @@ func processImage(startTime time.Time, days int) {
 		cmd := exec.Command(name, args...)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			log.Error("curTimeStr = %v, err = %v", curTimeStr, err)
+			log.Error("curTimeStr = %v, err = %v, output = %v",
+				curTimeStr, err, string(output))
 
 			if tryTimes > 3 {
 				tryTimes = 0
@@ -142,11 +144,45 @@ func process2019() {
 }
 
 func process2020() {
-	startTime := time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)
-	process("process2020", startTime, 304) // left 2 months
+	// startTime := time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)
+	// process("process2020", startTime, 304) // left 2 months
+
+	startTime := time.Date(2020, 11, 1, 0, 0, 0, 0, time.Local)
+	process("process2020", startTime, 61)
 }
 
+func process_start_to_end(name string, startYear, startMonth, startDay,
+	endYear, endMonth, endDay int) {
+	startTime := time.Date(startYear, time.Month(startMonth), startDay, 0, 0, 0, 0, time.Local)
+	endTime := time.Date(endYear, time.Month(endMonth), endDay, 0, 0, 0, 0, time.Local)
+	elapsed := endTime.Sub(startTime)
+	days := int(elapsed.Hours())/24 + 1
+	process(name, startTime, days)
+}
+
+func process2021() {
+	process_start_to_end("2021", 2021, 1, 1, 2021, 3, 31)
+}
+
+var gStartYear int
+var gStartMonth int
+var gStartDay int
+var gEndYear int
+var gEndMonth int
+var gEndDay int
+
 func main() {
+
+	flag.IntVar(&gStartYear, "StartYear", 2021, "StartYear")
+	flag.IntVar(&gStartMonth, "StartMonth", 1, "StartMonth")
+	flag.IntVar(&gStartDay, "StartDay", 1, "StartDay")
+
+	flag.IntVar(&gEndYear, "EndYear", 2021, "EndYear")
+	flag.IntVar(&gEndMonth, "EndMonth", 1, "EndMonth")
+	flag.IntVar(&gEndDay, "EndDay", 1, "EndDay")
+
+	flag.Parse()
+
 	w := mwriter.New("/home/huangjian/oss_process.log",
 		10*1024*1024,
 		time.Duration(4320*int64(time.Minute)))
@@ -163,5 +199,9 @@ func main() {
 
 	//process2018()
 	//process2019()
-	process2020()
+	//process2020()
+	//process2021()
+
+	process_start_to_end("test", gStartYear, gStartMonth, gStartDay,
+		gEndYear, gEndMonth, gEndDay)
 }

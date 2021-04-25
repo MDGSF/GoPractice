@@ -1,4 +1,4 @@
-module ossDemo2
+module ossclean
 
 go 1.14
 
